@@ -1,0 +1,50 @@
+body {
+    font-family: "Public Sans", sans-serif;
+}
+
+button {
+    font-family: "Public Sans", sans-serif;
+    background-color: #f9f9f9;
+    border: 1px solid #d6d6d6;
+    border-radius: 5px;
+    margin: 2px;
+}
+
+h3 {
+    text-align: center;
+}
+
+footer {
+    font-size: 0.75rem;
+}
+
+.container {
+    margin-top: 1rem;
+}
+
+.rc-slider-track {
+    background-color: rgb(67, 147, 195);
+}
+
+.rc-slider-dot-active {
+    border-color: rgb(67, 147, 195);
+    border: solid 2px rgb(67, 147, 195);
+}
+
+.rc-slider-handle {
+    background-color: rgb(67, 147, 195);
+    border-color: rgb(67, 147, 195);
+}
+
+.rc-slider-handle:hover {
+    border-color: rgb(67, 147, 195);
+}
+
+.rc-slider-handle:focus {
+    border-color: rgb(67, 147, 195);
+    box-shadow: 0 0 0 5px rgba(67, 147, 195, 0.35);
+}
+
+.rc-slider-handle-active:active {
+    border-color: rgb(67, 147, 195);
+}
