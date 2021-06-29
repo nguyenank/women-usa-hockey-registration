@@ -34,6 +34,9 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
 )
+
+server = app.server
+
 app.title = "Girls/Women USA Hockey Enrollment"
 app.index_string = INDEX_STRING
 
