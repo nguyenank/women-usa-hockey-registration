@@ -1,4 +1,5 @@
 from functools import reduce
+from math import ceil, floor
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -50,57 +51,38 @@ def flattenDictionary(d):
     return reduce(f, d)
 
 
-def getColor(percent):
+def getColor(percent, range):
     c = colors.diverging.RdBu
-    shift = percent + 100
-    if shift > 199:
-        shift = 199
+    if percent == 0:
+        return c[len(c) // 2 + 1]
+    c = c[: len(c) // 2 + 1] + c[len(c) // 2 + 2 :]
+    div_factor = range / len(c)
+    shift = percent + range / 2
+    if shift > range - 1:
+        shift = range - 1
     elif shift < 0:
         shift = 0
-    elif shift > 100 and shift < 120:
-        shift = 120
-    index = round((shift) / 20)
-    return c[index]
+    div = shift / div_factor
+    low_index = floor(div)
+    if low_index == len(c) - 1:
+        return c[low_index]
+    return colors.label_rgb(
+        colors.find_intermediate_color(
+            colors.unlabel_rgb(c[low_index]),
+            colors.unlabel_rgb(c[low_index + 1]),
+            shift / div_factor - low_index,
+        )
+    )
 
 
 def createSlider(minYear, maxYear, suffix):
-    return html.Div(
-        [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [
-                                html.Center(
-                                    html.Button("Play", id="play" + suffix, n_clicks=0)
-                                ),
-                                html.Button("Pause", id="pause" + suffix, n_clicks=0),
-                            ]
-                        ),
-                        width=1,
-                    ),
-                    dbc.Col(
-                        dcc.Slider(
-                            id="year" + suffix,
-                            step=None,
-                            min=minYear,
-                            max=maxYear,
-                            marks=flattenDictionary(
-                                [{x: str(x)} for x in range(minYear, maxYear + 1)]
-                            ),
-                            value=maxYear,
-                        ),
-                        align="end",
-                    ),
-                ],
-            ),
-            dcc.Interval(
-                id="interval" + suffix,
-                interval=2000,
-                max_intervals=maxYear - minYear,
-                n_intervals=maxYear - minYear,
-            ),
-        ]
+    return dcc.Slider(
+        id="year" + suffix,
+        step=None,
+        min=minYear,
+        max=maxYear,
+        marks=flattenDictionary([{x: str(x)} for x in range(minYear, maxYear + 1)]),
+        value=maxYear,
     )
 
 
@@ -156,9 +138,45 @@ def createTab(tab):
                 ]
             )
         )
+    elif tab == "tab-districts":
+        return dbc.Container(
+            html.Div(
+                [
+                    html.H3(
+                        children="Percent Change in USA Hockey Enrollment for Girls/Women by District (2008-2020)"
+                    ),
+                    html.Label("Age Group"),
+                    dcc.Dropdown(
+                        clearable=False,
+                        options=[
+                            {"label": x, "value": x}
+                            for x in [
+                                "Total",
+                                "20&Over",
+                                "19",
+                                "17-18",
+                                "15-16",
+                                "13-14",
+                                "11-12",
+                                "9-10",
+                                "7-8",
+                                "6&U",
+                            ]
+                        ],
+                        value="Total",
+                        id="ages-district",
+                    ),
+                    dcc.Graph(
+                        id="choropleth-district",
+                        config={"displayModeBar": False, "scrollZoom": False},
+                    ),
+                    createSlider(2008, 2020, "-district"),
+                ],
+            )
+        )
 
 
-def getChoropleth(locations, z, customdata, geojson, year):
+def getChoropleth(locations, z, customdata, geojson, year, ages, zmax, zmin):
     choropleth = go.Choropleth(
         colorscale="RdBu",
         colorbar={
@@ -171,15 +189,15 @@ def getChoropleth(locations, z, customdata, geojson, year):
             },
         },
         hoverlabel={
-            "bgcolor": list(z.apply(getColor)),
+            "bgcolor": list(z.apply(getColor, args=(zmax - zmin,))),
             "font": {"family": "Public Sans"},
         },
         geojson=geojson,
         locations=locations,
         featureidkey="properties.Name",
         z=z,
-        zmax=100,
-        zmin=-100,
+        zmax=zmax,
+        zmin=zmin,
         zmid=0,
         marker_line_color="white",
         customdata=customdata,
@@ -196,9 +214,9 @@ def getChoropleth(locations, z, customdata, geojson, year):
         margin={"r": 0, "t": 0, "l": 1, "b": 0},
         title={
             "font": {"family": "Public Sans"},
-            "text": f"<b>{year}</b>",
-            "x": 0.85,
-            "y": 0.1,
+            "text": f"<br><b>{year}</b></br><b>{ages}</b>",
+            "x": 0.80,
+            "y": 0.3,
             "yanchor": "bottom",
         },
     )

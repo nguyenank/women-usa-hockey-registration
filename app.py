@@ -18,16 +18,21 @@ from components import INDEX_STRING, getChoropleth, createTab
 
 
 dfValue = pd.read_pickle("./data/girls-women-by-district-by-state.pkl")
-df06 = pd.read_pickle("./data/pct_change_06-20.pkl")
-dfAbsChange06 = pd.read_pickle("./data/abs_change_06-20.pkl")
-df91 = pd.read_pickle("./data/pct_change_91-04.pkl")
-dfAbsChange91 = pd.read_pickle("./data/abs_change_91-04.pkl")
+dfDistrictsValue = pd.read_pickle("./data/districts/girls-women-by-district.pkl")
+df06 = pd.read_pickle("./data/06-20/pct_change_06-20.pkl")
+dfAbsChange06 = pd.read_pickle("./data/06-20/abs_change_06-20.pkl")
+
+df91 = pd.read_pickle("./data/91-04/pct_change_91-04.pkl")
+dfAbsChange91 = pd.read_pickle("./data/91-04/abs_change_91-04.pkl")
+
+dfDistricts = pd.read_pickle("./data/districts/pct_change_districts.pkl")
+dfAbsChangeDistricts = pd.read_pickle("./data/districts/abs_change_districts.pkl")
+
 with open("./data/states.geojson") as response:
     states = json.load(response)
 
-
-# with open("./data/districts07-20.geojson") as response:
-#     districts = json.load(response)
+with open("./data/districts07-20.geojson") as response:
+    districts = json.load(response)
 
 app = dash.Dash(
     __name__,
@@ -48,6 +53,7 @@ app.layout = html.Div(
             children=[
                 dcc.Tab(label="1991-2004", value="tab-91-04"),
                 dcc.Tab(label="2006-2020", value="tab-06-20"),
+                dcc.Tab(label="Districts (2007-2020)", value="tab-districts"),
             ],
             colors={
                 "border": "#d6d6d6",
@@ -65,73 +71,6 @@ app.layout = html.Div(
 @app.callback(Output("tabs-year-content", "children"), Input("tabs-year", "value"))
 def render_tab(tab):
     return createTab(tab)
-
-
-# Slider
-@app.callback(
-    [
-        Output("interval-06", "max_intervals"),
-        Output("interval-06", "n_intervals"),
-    ],
-    [
-        Input("play-06", "n_clicks"),
-        Input("pause-06", "n_clicks"),
-        State("year-06", "value"),
-    ],
-    prevent_initial_call=True,
-)
-def button_06(play, pause, year):
-    ctx = dash.callback_context
-    if dash.callback_context.triggered[0]["prop_id"] == "play-06.n_clicks":
-        if year == 2020:
-            return (14, 0)
-        return (2020 - year - 1, 0)
-    else:
-        return (0, 0)
-
-
-@app.callback(
-    Output("year-06", "value"),
-    [Input("interval-06", "n_intervals"), State("year-06", "value")],
-    prevent_initial_call=True,
-)
-def interval_update__06(n, year):
-    if year == 2020:
-        return 2006
-    return year + 1
-
-
-@app.callback(
-    [
-        Output("interval-91", "max_intervals"),
-        Output("interval-91", "n_intervals"),
-    ],
-    [
-        Input("play-91", "n_clicks"),
-        Input("pause-91", "n_clicks"),
-        State("year-91", "value"),
-    ],
-    prevent_initial_call=True,
-)
-def button_91(play, pause, year):
-    ctx = dash.callback_context
-    if dash.callback_context.triggered[0]["prop_id"] == "play-91.n_clicks":
-        if year == 2004:
-            return (13, 0)
-        return (2004 - year - 1, 0)
-    else:
-        return (0, 0)
-
-
-@app.callback(
-    Output("year-91", "value"),
-    [Input("interval-91", "n_intervals"), State("year-91", "value")],
-    prevent_initial_call=True,
-)
-def interval_update_91(n, year):
-    if year == 2004:
-        return 1991
-    return year + 1
 
 
 # Choropleth
@@ -209,7 +148,18 @@ def display_choropleth_06(year, ages):
             dfAbsChange06[dfAbsChange06.Year == str(year)][ages],
         )
     )[0]
-    return getChoropleth(df["State"], df[ages], customdata, states, year)
+    return getChoropleth(
+        **{
+            "locations": df["State"],
+            "z": df[ages],
+            "customdata": customdata,
+            "geojson": states,
+            "year": year,
+            "ages": ages,
+            "zmax": 100,
+            "zmin": -100,
+        }
+    )
 
 
 @app.callback(
@@ -225,7 +175,45 @@ def display_choropleth_91(year):
             dfAbsChange91[dfAbsChange91.Year == str(year)].Total,
         )
     )[0]
-    return getChoropleth(df["State"], df.Total, customdata, False, year)
+    return getChoropleth(
+        **{
+            "locations": df["State"],
+            "z": df.Total,
+            "customdata": customdata,
+            "geojson": False,
+            "year": year,
+            "ages": "",
+            "zmax": 100,
+            "zmin": -100,
+        }
+    )
+
+
+@app.callback(
+    Output("choropleth-district", "figure"),
+    [Input("year-district", "value"), Input("ages-district", "value")],
+)
+def display_choropleth_district(year, ages):
+    df = dfDistricts[dfDistricts.Year == str(year)].fillna(0).replace(np.inf, 99999.99)
+    customdata = np.dstack(
+        (
+            list(df["District"]),
+            dfDistrictsValue[dfDistrictsValue.Year == str(year)][ages],
+            dfAbsChangeDistricts[dfAbsChangeDistricts.Year == str(year)][ages],
+        )
+    )[0]
+    return getChoropleth(
+        **{
+            "locations": df["District"],
+            "z": df[ages],
+            "customdata": customdata,
+            "geojson": districts,
+            "year": year,
+            "ages": ages,
+            "zmax": 25,
+            "zmin": -25,
+        }
+    )
 
 
 if __name__ == "__main__":
