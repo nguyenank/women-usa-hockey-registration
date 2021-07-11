@@ -92,7 +92,7 @@ def createTab(tab):
             html.Div(
                 [
                     html.H3(
-                        children="Percent Change in USA Hockey Enrollment for Girls/Women (2006-2020)"
+                        children="Percent Change in USA Hockey Registration for Girls/Women (2006-2020)"
                     ),
                     html.Label("Age Group"),
                     dcc.Dropdown(
@@ -128,7 +128,7 @@ def createTab(tab):
             html.Div(
                 [
                     html.H3(
-                        children="Percent Change in USA Hockey Enrollment for Girls/Women (1991-2004)"
+                        children="Percent Change in USA Hockey Registration for Girls/Women (1991-2004)"
                     ),
                     dcc.Graph(
                         id="choropleth-91",
@@ -143,7 +143,7 @@ def createTab(tab):
             html.Div(
                 [
                     html.H3(
-                        children="Percent Change in USA Hockey Enrollment for Girls/Women by District (2008-2020)"
+                        children="Percent Change in USA Hockey Registration for Girls/Women by District (2008-2020)"
                     ),
                     html.Label("Age Group"),
                     dcc.Dropdown(

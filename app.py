@@ -42,7 +42,7 @@ app = dash.Dash(
 
 server = app.server
 
-app.title = "Girls/Women USA Hockey Enrollment"
+app.title = "Girls/Women USA Hockey Registration"
 app.index_string = INDEX_STRING
 
 app.layout = html.Div(
