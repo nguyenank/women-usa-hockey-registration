@@ -11,6 +11,7 @@ import numpy as np
 import json
 import time
 
+# HTML Layout
 INDEX_STRING = """
 <!DOCTYPE html>
 <html>
@@ -52,21 +53,25 @@ def flattenDictionary(d):
 
 
 def getColor(percent, range):
+    """
+    approximately get appropriate color on scale for hover background
+    """
     c = colors.diverging.RdBu
     if percent == 0:
         return c[len(c) // 2 + 1]
+    # exclude halfway point from color scale
     c = c[: len(c) // 2 + 1] + c[len(c) // 2 + 2 :]
     div_factor = range / len(c)
     shift = percent + range / 2
+    # prevent out of bounds indexing
     if shift > range - 1:
         shift = range - 1
     elif shift < 0:
         shift = 0
-    div = shift / div_factor
-    low_index = floor(div)
-    if low_index == len(c) - 1:
+    low_index = floor(shift / div_factor)
+    if low_index == len(c) - 1:  # get maximum color
         return c[low_index]
-    return colors.label_rgb(
+    return colors.label_rgb(  # find color proportionally in between
         colors.find_intermediate_color(
             colors.unlabel_rgb(c[low_index]),
             colors.unlabel_rgb(c[low_index + 1]),
@@ -194,7 +199,7 @@ def getChoropleth(locations, z, customdata, geojson, year, ages, zmax, zmin):
         },
         geojson=geojson,
         locations=locations,
-        featureidkey="properties.Name",
+        featureidkey="properties.Name",  # matching property in geojson
         z=z,
         zmax=zmax,
         zmin=zmin,
@@ -203,10 +208,10 @@ def getChoropleth(locations, z, customdata, geojson, year, ages, zmax, zmin):
         customdata=customdata,
         hovertemplate="<em>%{customdata[0]}</em>"
         + "<br><b>% Change:</b> %{z:.2f}%</br>"
-        + "<b>Number:</b> %{customdata[1]:,}"
+        + "<b># Players:</b> %{customdata[1]:,}"
         + "<br><b># Change:</b> %{customdata[2]:+,}</br><extra></extra>",
     )
-    if not geojson:
+    if not geojson:  # no geojson, use default states
         choropleth.locationmode = "USA-states"
     fig = go.Figure(choropleth)
     fig.update_geos(scope="usa")

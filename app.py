@@ -16,21 +16,27 @@ import time
 
 from components import INDEX_STRING, getChoropleth, createTab
 
-
-dfValue = pd.read_pickle("./data/girls-women-by-district-by-state.pkl")
+# District Data
 dfDistrictsValue = pd.read_pickle("./data/districts/girls-women-by-district.pkl")
+dfAbsChangeDistricts = pd.read_pickle("./data/districts/abs_change_districts.pkl")
+dfDistricts = pd.read_pickle("./data/districts/pct_change_districts.pkl")
+
+# 1991 - 2020 STate Data
+dfValue = pd.read_pickle("./data/girls-women-by-district-by-state.pkl")
+
+# 2006 -2020 Data
 df06 = pd.read_pickle("./data/06-20/pct_change_06-20.pkl")
 dfAbsChange06 = pd.read_pickle("./data/06-20/abs_change_06-20.pkl")
 
+# 1991 - 2004 Data
 df91 = pd.read_pickle("./data/91-04/pct_change_91-04.pkl")
 dfAbsChange91 = pd.read_pickle("./data/91-04/abs_change_91-04.pkl")
 
-dfDistricts = pd.read_pickle("./data/districts/pct_change_districts.pkl")
-dfAbsChangeDistricts = pd.read_pickle("./data/districts/abs_change_districts.pkl")
-
+# map of states (including East and West PA + Washington DC)
 with open("./data/states.geojson") as response:
     states = json.load(response)
 
+# map of USA Hockey districts from 2007 to 2020
 with open("./data/districts07-20.geojson") as response:
     districts = json.load(response)
 
@@ -43,7 +49,7 @@ app = dash.Dash(
 server = app.server
 
 app.title = "Girls/Women USA Hockey Registration"
-app.index_string = INDEX_STRING
+app.index_string = INDEX_STRING  # format HTML
 
 app.layout = html.Div(
     [
@@ -77,6 +83,10 @@ def render_tab(tab):
 
 
 def abbrevToState(a):
+    """
+    convert state abbreviation to the full name
+    """
+
     states = {
         "AL": "Alabama",
         "AK": "Alaska",
@@ -141,6 +151,7 @@ def abbrevToState(a):
 )
 def display_choropleth_06(year, ages):
     df = df06[df06.Year == str(year)].fillna(0).replace(np.inf, 99999.99)
+    # customdata is for additional info in the hover
     customdata = np.dstack(
         (
             list(df["State"].apply(abbrevToState)),
@@ -168,6 +179,7 @@ def display_choropleth_06(year, ages):
 )
 def display_choropleth_91(year):
     df = df91[df91.Year == str(year)].fillna(0).replace(np.inf, 99999.99)
+    # customdata is for additional info in the hover
     customdata = np.dstack(
         (
             list(df["State"].apply(abbrevToState)),
@@ -180,7 +192,7 @@ def display_choropleth_91(year):
             "locations": df["State"],
             "z": df.Total,
             "customdata": customdata,
-            "geojson": False,
+            "geojson": False,  # before 07, just uses normal states layout
             "year": year,
             "ages": "",
             "zmax": 100,
@@ -195,6 +207,7 @@ def display_choropleth_91(year):
 )
 def display_choropleth_district(year, ages):
     df = dfDistricts[dfDistricts.Year == str(year)].fillna(0).replace(np.inf, 99999.99)
+    # customdata is for additional info in the hover
     customdata = np.dstack(
         (
             list(df["District"]),
