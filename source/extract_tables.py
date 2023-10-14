@@ -58,7 +58,7 @@ def setTypes(df, stringColumns: List[str]):
         df[stringColumns],
         df.drop(columns=stringColumns)
         .astype("str")  # prevent errors with 0 being autocast to int
-        .applymap(locale.atoi),  # comma'ed numbers
+        .map(locale.atoi),  # comma'ed numbers
         left_index=True,
         right_index=True,
     ).astype(flattenDictionary([{c: pd.StringDtype()} for c in stringColumns]))
@@ -196,16 +196,15 @@ def clean_csv(
                 df = df.drop(columns="Total").rename(columns=colNames)
 
             def fixColumns(columnName):
-                # https://stackoverflow.com/a/17116976
-                s = df[columnName].str.split("\r").apply(pd.Series, 1).stack()
+                s = df[columnName].str.split("\r").explode(columnName)
                 s.name = columnName
                 return s.reset_index(drop=True)
 
-            df = (
-                pd.concat([fixColumns(c) for c in df.columns], axis=1)
-                .append(totals[list(df.columns)])
-                .reset_index(drop=True)
-            )
+            df = pd.concat([fixColumns(c) for c in df.columns], axis=1)
+            df = pd.concat(
+                [df, pd.DataFrame([totals[list(df.columns)].to_dict()])],
+                ignore_index=True,
+            ).reset_index(drop=True)
             df = setTypes(df, ["District", "State"])
 
         elif name in ["17-18", "18-19", "19-20", "20-21"]:
@@ -221,7 +220,6 @@ def clean_csv(
                 .replace(b"\xe2\x80\x90", b"-")
                 .decode("utf-8")
             )
-            df = df.applymap(lambda x: x.replace(" ", ""))
             df = setTypes(df.replace("-", "0"), ["District", "State"])
         elif name in ["21-22", "22-23"]:
             df = df.applymap(
@@ -512,7 +510,7 @@ def change(
 # run entire data process
 if __name__ == "__main__":
     # tables_to_csvs(DATA)
-    # clean_csvs(DATA)
-    # combine_tables(DATA)
+    clean_csvs(DATA)
+    combine_tables(DATA)
     state_change_tables()
     district_tables()

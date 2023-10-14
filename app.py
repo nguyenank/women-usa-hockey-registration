@@ -317,8 +317,10 @@ def display_choropleth_district(year, ages):
             dfAbsChangeDistricts[dfAbsChangeDistricts.Year == str(year)][ages],
         )
     )[0]
-    total = np.sum(dfValue[dfValue.Year == str(year)][ages])
-    lastYearTotal = np.sum(dfValue[dfValue.Year == str(year - 1)][ages])
+    total = np.sum(dfDistrictsValue[dfDistrictsValue.Year == str(year)][ages])
+    lastYearTotal = np.sum(
+        dfDistrictsValue[dfDistrictsValue.Year == str(year - 1)][ages]
+    )
     overall_change = (total - lastYearTotal) / lastYearTotal * 100
     return getChoropleth(
         **{
