@@ -60,7 +60,7 @@ app.layout = html.Div(
     [
         dcc.Tabs(
             id="tabs-overall",
-            value="tab-registration-numbers",
+            value="subtab-registration-numbers",
             children=[
                 dcc.Tab(
                     label="Registration Numbers",

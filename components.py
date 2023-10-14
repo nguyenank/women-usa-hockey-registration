@@ -331,6 +331,7 @@ def getChoropleth(
             "y": 0.3,
             "yanchor": "bottom",
         },
+        dragmode=False,
     )
     return fig
 
@@ -371,6 +372,7 @@ def getAbsoluteChoropleth(
     fig = go.Figure(choropleth)
     fig.update_geos(scope="usa")
     fig.update_layout(
+        dragmode=False,
         margin={"r": 0, "t": 0, "l": 1, "b": 0},
         title={
             "font": {"family": "Public Sans"},
