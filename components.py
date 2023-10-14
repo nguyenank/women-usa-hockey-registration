@@ -23,6 +23,7 @@ INDEX_STRING = """
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
+        <script defer data-domain="women-usa-hockey-registration-422d1425d167.herokuapp.com" src="https://plausible.io/js/script.js"></script>
     </head>
     <body>
         {%app_entry%}
