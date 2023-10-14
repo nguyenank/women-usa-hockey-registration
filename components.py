@@ -1,7 +1,7 @@
 from functools import reduce
 from math import ceil, floor
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import plotly.express as px
@@ -29,7 +29,7 @@ INDEX_STRING = """
         <footer>
             <hr />
             <div class="container">
-                Created by An Nguyen (twitter: @nguyenank_). Data taken from USA Hockey.
+                Created by An Nguyen (bluesky: nguyenank@bsky.social). Data taken from USA Hockey.
             </div>
             {%config%}
             {%scripts%}
@@ -92,12 +92,12 @@ def createSlider(minYear, maxYear, suffix):
 
 
 def createTab(tab):
-    if tab == "tab-06-20":
+    if tab == "tab-06-22":
         return dbc.Container(
             html.Div(
                 [
                     html.H3(
-                        children="Percent Change in USA Hockey Registration for Girls/Women (2006-2020)"
+                        children="Percent Change in USA Hockey Registration for Girls/Women (2006-2022)"
                     ),
                     html.Label("Age Group"),
                     dcc.Dropdown(
@@ -124,7 +124,7 @@ def createTab(tab):
                         id="choropleth-06",
                         config={"displayModeBar": False, "scrollZoom": False},
                     ),
-                    createSlider(2006, 2020, "-06"),
+                    createSlider(2006, 2022, "-06"),
                 ],
             )
         )
@@ -148,7 +148,7 @@ def createTab(tab):
             html.Div(
                 [
                     html.H3(
-                        children="Percent Change in USA Hockey Registration for Girls/Women by District (2008-2020)"
+                        children="Percent Change in USA Hockey Registration for Girls/Women by District (2008-2022)"
                     ),
                     html.Label("Age Group"),
                     dcc.Dropdown(
@@ -175,7 +175,7 @@ def createTab(tab):
                         id="choropleth-district",
                         config={"displayModeBar": False, "scrollZoom": False},
                     ),
-                    createSlider(2008, 2020, "-district"),
+                    createSlider(2008, 2022, "-district"),
                 ],
             )
         )

@@ -2,8 +2,8 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
@@ -21,12 +21,12 @@ dfDistrictsValue = pd.read_pickle("./data/districts/girls-women-by-district.pkl"
 dfAbsChangeDistricts = pd.read_pickle("./data/districts/abs_change_districts.pkl")
 dfDistricts = pd.read_pickle("./data/districts/pct_change_districts.pkl")
 
-# 1991 - 2020 STate Data
+# 1991 - 2022 State Data
 dfValue = pd.read_pickle("./data/girls-women-by-district-by-state.pkl")
 
-# 2006 -2020 Data
-df06 = pd.read_pickle("./data/06-20/pct_change_06-20.pkl")
-dfAbsChange06 = pd.read_pickle("./data/06-20/abs_change_06-20.pkl")
+# 2006 -2022 Data
+df06 = pd.read_pickle("./data/06-22/pct_change_06-22.pkl")
+dfAbsChange06 = pd.read_pickle("./data/06-22/abs_change_06-22.pkl")
 
 # 1991 - 2004 Data
 df91 = pd.read_pickle("./data/91-04/pct_change_91-04.pkl")
@@ -36,8 +36,8 @@ dfAbsChange91 = pd.read_pickle("./data/91-04/abs_change_91-04.pkl")
 with open("./data/states.geojson") as response:
     states = json.load(response)
 
-# map of USA Hockey districts from 2007 to 2020
-with open("./data/districts07-20.geojson") as response:
+# map of USA Hockey districts from 2007 to 2022
+with open("./data/districts07-22.geojson") as response:
     districts = json.load(response)
 
 app = dash.Dash(
@@ -55,11 +55,11 @@ app.layout = html.Div(
     [
         dcc.Tabs(
             id="tabs-year",
-            value="tab-06-20",
+            value="tab-06-22",
             children=[
                 dcc.Tab(label="1991-2004", value="tab-91-04"),
-                dcc.Tab(label="2006-2020", value="tab-06-20"),
-                dcc.Tab(label="Districts (2007-2020)", value="tab-districts"),
+                dcc.Tab(label="2006-2022", value="tab-06-22"),
+                dcc.Tab(label="Districts (2007-2022)", value="tab-districts"),
             ],
             colors={
                 "border": "#d6d6d6",
@@ -72,6 +72,7 @@ app.layout = html.Div(
 )
 
 ### CALLBACKS
+
 
 # Tab
 @app.callback(Output("tabs-year-content", "children"), Input("tabs-year", "value"))

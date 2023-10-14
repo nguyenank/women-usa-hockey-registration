@@ -1,11 +1,12 @@
+# coding=utf-8
 import tabula
+import re
 import pandas as pd
 import numpy as np
 from typing import List
 from tqdm import tqdm
 from functools import reduce
 import locale
-import unicodedata
 
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
@@ -30,7 +31,22 @@ DATA = [
     {"name": "18-19", "page": "8"},
     {"name": "19-20", "page": "7"},
     {"name": "20-21", "page": "7"},
+    {"name": "21-22", "page": "7"},
+    {"name": "22-23", "page": "7"},
 ]
+
+DATA_COLUMNS = [
+    "20&Over",
+    "19",
+    "17-18",
+    "15-16",
+    "13-14",
+    "11-12",
+    "9-10",
+    "7-8",
+    "6&U",
+]
+
 
 ## helper functions
 def setTypes(df, stringColumns: List[str]):
@@ -204,6 +220,30 @@ def clean_csv(
                 lambda x: x.encode("utf-8")
                 .replace(b"\xe2\x80\x90", b"-")
                 .decode("utf-8")
+            )
+            df = df.applymap(lambda x: x.replace(" ", ""))
+            df = setTypes(df.replace("-", "0"), ["District", "State"])
+        elif name in ["21-22", "22-23"]:
+            df = df.applymap(
+                lambda x: str(x)
+                .encode("utf-8")
+                .replace(b"\xe2\x80\x90", b"-")
+                .decode("utf-8")
+            )
+            df.columns = df.columns.map(
+                lambda x: x.encode("utf-8")
+                .replace(b"\xe2\x80\x90", b"-")
+                .decode("utf-8")
+            )
+            df = df.rename(
+                columns={
+                    "20 & Over": "20&Over",
+                    "6&Under": "6&U",
+                    "6 & Under": "6&U",
+                }
+            )
+            df[DATA_COLUMNS] = df[DATA_COLUMNS].applymap(
+                lambda x: str(x).replace("", "")
             )
             df = setTypes(df.replace("-", "0"), ["District", "State"])
     elif name == "05-06":
@@ -388,14 +428,14 @@ def state_change_tables():
     l = [
         ("pct_change_91-04", True),
         ("abs_change_91-04", False),
-        ("pct_change_06-20", True),
-        ("abs_change_06-20", False),
+        ("pct_change_06-22", True),
+        ("abs_change_06-22", False),
     ]
-    for (name, bool) in l:
+    for name, bool in l:
         years = name[-5:]
         if years == "91-04":
             df = full_df[(full_df.Year.apply(int) < 2005) & (full_df.Year != "1990")]
-        elif years == "06-20":
+        elif years == "06-22":
             df = full_df[full_df.Year.apply(int) >= 2006]
         df = df.apply(change, args=(years, bool, full_df, "State"), axis="columns")
         if years == "91-04":
@@ -422,12 +462,14 @@ def district_tables():
         ("pct_change_districts", True),
         ("abs_change_districts", False),
     ]
-    for (name, bool) in l:
+    for name, bool in l:
         df = new_dist_df[new_dist_df.Year.astype("int") >= 2008].apply(
             change, args=("districts", bool, new_dist_df, "District"), axis="columns"
         )
         df.to_csv(f"./data/csvs/merged/{name}.csv", index=False)
         df.to_pickle(f"./data/pkls/{name}.pkl")
+    new_dist_df.to_csv("./data/csvs/merged/girls-women-by-district.csv", index=False)
+    new_dist_df.to_pickle("./data/pkls/girls-women-by-district.pkl")
 
 
 def change(
@@ -458,7 +500,7 @@ def change(
         return newRow
 
     newRow = calculateChange(newRow, "Total")
-    if years == "06-20":
+    if years == "06-22":
         for column in row.index[4:]:
             newRow = calculateChange(newRow, column)
     elif years == "districts":
@@ -469,8 +511,8 @@ def change(
 
 # run entire data process
 if __name__ == "__main__":
-    tables_to_csvs(DATA)
-    clean_csvs(DATA)
-    combine_tables(DATA)
+    # tables_to_csvs(DATA)
+    # clean_csvs(DATA)
+    # combine_tables(DATA)
     state_change_tables()
     district_tables()
