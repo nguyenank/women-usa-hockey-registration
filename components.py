@@ -52,7 +52,7 @@ def flattenDictionary(d):
     return reduce(f, d)
 
 
-def getColor(percent, range):
+def getDivergingColor(percent, range):
     """
     approximately get appropriate color on scale for hover background
     """
@@ -80,6 +80,25 @@ def getColor(percent, range):
     )
 
 
+def getAbsoluteColor(value, range):
+    """
+    approximately get appropriate color on scale for hover background
+    """
+    c = colors.sequential.Blues
+    percent = value / range
+    if percent > 1:
+        return c[len(c) - 1]
+    val = (len(c) - 1) * percent
+    low_index = floor(val)
+    return colors.label_rgb(  # find color proportionally in between
+        colors.find_intermediate_color(
+            colors.unlabel_rgb(c[low_index]),
+            colors.unlabel_rgb(c[low_index + 1]),
+            val - low_index,
+        )
+    )
+
+
 def createSlider(minYear, maxYear, suffix):
     return dcc.Slider(
         id="year" + suffix,
@@ -103,7 +122,7 @@ def createTab(tab):
                     dcc.Dropdown(
                         clearable=False,
                         options=[
-                            {"label": x, "value": x}
+                            {"label": x if x != "Total" else "All Ages", "value": x}
                             for x in [
                                 "Total",
                                 "20&Over",
@@ -154,7 +173,7 @@ def createTab(tab):
                     dcc.Dropdown(
                         clearable=False,
                         options=[
-                            {"label": x, "value": x}
+                            {"label": x if x != "Total" else "All Ages", "value": x}
                             for x in [
                                 "Total",
                                 "20&Over",
@@ -179,9 +198,97 @@ def createTab(tab):
                 ],
             )
         )
+    elif tab == "tab-overall":
+        return dbc.Container(
+            html.Div(
+                [
+                    html.H3(
+                        children="Overall USA Hockey Registration for Girls/Women (1990-2022)"
+                    ),
+                    dcc.Graph(
+                        id="choropleth-overall",
+                        config={"displayModeBar": False, "scrollZoom": False},
+                    ),
+                    createSlider(1990, 2022, suffix="-overall"),
+                ],
+            )
+        )
+    elif tab == "tab-age-group":
+        return dbc.Container(
+            html.Div(
+                [
+                    html.H3(
+                        children="Overall USA Hockey Registration for Girls/Women by Age Group (2005-2022)"
+                    ),
+                    html.Label("Age Group"),
+                    dcc.Dropdown(
+                        clearable=False,
+                        options=[
+                            {"label": x if x != "Total" else "All Ages", "value": x}
+                            for x in [
+                                "20&Over",
+                                "19",
+                                "17-18",
+                                "15-16",
+                                "13-14",
+                                "11-12",
+                                "9-10",
+                                "7-8",
+                                "6&U",
+                            ]
+                        ],
+                        value="20&Over",
+                        id="ages-age-group",
+                    ),
+                    dcc.Graph(
+                        id="choropleth-age-group",
+                        config={"displayModeBar": False, "scrollZoom": False},
+                    ),
+                    createSlider(2005, 2022, suffix="-age-group"),
+                ],
+            )
+        )
+    elif tab == "tab-abs-districts":
+        return dbc.Container(
+            html.Div(
+                [
+                    html.H3(
+                        children="Overall USA Hockey Registration for Girls/Women by District (2007-2022)"
+                    ),
+                    html.Label("Age Group"),
+                    dcc.Dropdown(
+                        clearable=False,
+                        options=[
+                            {"label": x if x != "Total" else "All Ages", "value": x}
+                            for x in [
+                                "Total",
+                                "20&Over",
+                                "19",
+                                "17-18",
+                                "15-16",
+                                "13-14",
+                                "11-12",
+                                "9-10",
+                                "7-8",
+                                "6&U",
+                            ]
+                        ],
+                        value="Total",
+                        id="ages-abs-district",
+                    ),
+                    dcc.Graph(
+                        id="choropleth-abs-district",
+                        config={"displayModeBar": False, "scrollZoom": False},
+                    ),
+                    createSlider(2007, 2022, suffix="-abs-district"),
+                ],
+            )
+        )
 
 
-def getChoropleth(locations, z, customdata, geojson, year, ages, zmax, zmin):
+def getChoropleth(
+    locations, z, customdata, geojson, year, ages, overall_change, zmax, zmin
+):
     choropleth = go.Choropleth(
         colorscale="RdBu",
         colorbar={
@@ -194,7 +301,7 @@ def getChoropleth(locations, z, customdata, geojson, year, ages, zmax, zmin):
             },
         },
         hoverlabel={
-            "bgcolor": list(z.apply(getColor, args=(zmax - zmin,))),
+            "bgcolor": list(z.apply(getDivergingColor, args=(zmax - zmin,))),
             "font": {"family": "Public Sans"},
         },
         geojson=geojson,
@@ -219,7 +326,57 @@ def getChoropleth(locations, z, customdata, geojson, year, ages, zmax, zmin):
         margin={"r": 0, "t": 0, "l": 1, "b": 0},
         title={
             "font": {"family": "Public Sans"},
-            "text": f"<br><b>{year}</b></br><b>{ages}</b>",
+            "text": f"<br><b>{year}</b></br><b>{ages if ages != 'Total' else 'All Ages'}</b><br /> <br /><b>Overall Percent Change</b>:</br><b>{overall_change:.2f}</b>%",
+            "x": 0.80,
+            "y": 0.3,
+            "yanchor": "bottom",
+        },
+    )
+    return fig
+
+
+def getAbsoluteChoropleth(
+    locations, z, customdata, geojson, year, ages, total, zmax, zmin
+):
+    if geojson:
+        geojson = False if year < 2005 else geojson
+
+    choropleth = go.Choropleth(
+        colorscale="Blues",
+        colorbar={
+            "tickfont": {"family": "Public Sans"},
+            "title": {
+                "font": {"family": "Public Sans"},
+                "side": "right",
+                "text": "<b>Number of Registrations</b>",
+            },
+        },
+        hoverlabel={
+            "bgcolor": list(z.apply(getAbsoluteColor, args=((zmax - zmin),))),
+            "font": {"family": "Public Sans"},
+        },
+        geojson=geojson,
+        locations=locations,
+        featureidkey="properties.Name",  # matching property in geojson
+        z=z,
+        zmax=zmax,
+        zmin=zmin,
+        marker_line_color="white",
+        customdata=customdata,
+        hovertemplate="<em>%{customdata[0]}</em>"
+        + "<br><b># Players:</b> %{customdata[1]:,}</br><extra></extra>",
+    )
+    if not geojson:  # no geojson, use default states
+        choropleth.locationmode = "USA-states"
+    fig = go.Figure(choropleth)
+    fig.update_geos(scope="usa")
+    fig.update_layout(
+        margin={"r": 0, "t": 0, "l": 1, "b": 0},
+        title={
+            "font": {"family": "Public Sans"},
+            "text": f"<b>{year}</b><br /><b>{ages if ages != 'Total' else 'All Ages'}</b><br /><br></br><b>{total} Registrations</b>"
+            if ages
+            else f"<br><b>{year}</b></br><br /><b>{total} Registrations</b>",
             "x": 0.80,
             "y": 0.3,
             "yanchor": "bottom",
